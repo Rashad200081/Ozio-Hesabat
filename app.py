@@ -61,10 +61,10 @@ textarea::placeholder {
     color: #777777 !important;
 }
 
-/* "Başla" düyməsinin xanasının və yazısının rəngi */
+/* "Başla" düyməsinin xanasının (ağ) və yazısının (qara) rəngi */
 div.stButton > button {
-    background-color: #ffffff !important;  /* Düymənin xanasının rəngi (ağ) */
-    color: #e82562 !important;             /* "Başla" yazısının rəngi */
+    background-color: #ffffff !important;  /* Düymə xanasının rəngi (ağ) */
+    color: #000000 !important;             /* "Başla" yazısının rəngi (QARA) */
     border: none !important;
     font-weight: bold !important;
     font-size: 18px !important;
@@ -74,7 +74,7 @@ div.stButton > button {
 }
 div.stButton > button:hover {
     background-color: #f8f8f8 !important;
-    color: #c2185b !important;
+    color: #333333 !important;
     transform: scale(1.02);
 }
 </style>
@@ -237,3 +237,10 @@ if st.button("Başla", type="primary"):
                 df.to_excel(wb, index=False, sheet_name='Sheet1')
                 wb.close()
                 processed_data = output.getvalue()
+                
+                st.download_button(
+                    label="📥 Fayl olaraq Endir (.xlsx)",
+                    data=processed_data,
+                    file_name="sifaris_hesabati.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
