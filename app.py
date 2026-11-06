@@ -11,7 +11,7 @@ st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 custom_style = """
 <style>
 [data-testid="stAppViewContainer"] {
-    background-color: #12121f;
+    background-color:#e82562;
     color: #ffffff;
 }
 [data-testid="stAppViewContainer"] > .main {
