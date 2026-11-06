@@ -7,7 +7,7 @@ from datetime import datetime
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 
-# CSS Stilləri
+# Arxa fon rəngi, mətn daxiletmə sahələri və "Başla" düyməsinin stili üçün CSS
 custom_style = """
 <style>
 /* Bütün arxa fon Ozio brend rəngi */
@@ -27,21 +27,17 @@ custom_style = """
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 30px;
+    gap: 25px;
     margin-bottom: 25px;
 }
 
 .courier-img {
-    height: 120px;
+    height: 100px;
     object-fit: contain;
 }
 
-.courier-left {
-    transform: scaleX(1); /* Sola baxan kuryer */
-}
-
 .courier-right {
-    transform: scaleX(-1); /* Sağ tərəfə çevrilmiş kuryer */
+    transform: scaleX(-1);
 }
 
 /* Ozio Loqosu (80px) */
@@ -104,4 +100,4 @@ div.stButton > button:hover {
 }
 
 div.stButton > button:hover p {
-    color
+    color: #000000 !important;
