@@ -46,7 +46,7 @@ custom_style = """
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-# Yuxarı mərkəzdə parlaq Ozio brend logosu
+# Yuxarı mərkəzdə parlaq Ozio brend logosu her yeri əhatə etsin
 st.markdown('<div class="ozio-logo-container"><div class="ozio-logo-badge">ozio<span>+</span></div></div>', unsafe_allow_html=True)
 
 st.title("📦 Ozio Sifarişləri - Hesabat Analizatoru")
