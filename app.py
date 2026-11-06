@@ -15,7 +15,7 @@ custom_style = """
     color: #ffffff;
 }
 [data-testid="stAppViewContainer"] > .main {
-    padding-top: 40px;
+    padding-top: 80px;
 }
 [data-testid="stHeader"] {
     background-color: rgba(0,0,0,0);
