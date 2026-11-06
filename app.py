@@ -176,6 +176,7 @@ def parse_orders(text):
     return df
 
 if st.button("Başla", type="primary"):
+    color white
     if not raw_text.strip():
         st.warning("Zəhmət olmasa mətn daxil edin!")
     else:
