@@ -39,7 +39,7 @@ custom_style = """
     box-shadow: 0px 4px 15px rgba(232, 37, 98, 0.4);
 }
 .ozio-logo-badge span {
-    font-size: 1000px;
+    font-size: 45px;
     vertical-align: super;
 }
 </style>
