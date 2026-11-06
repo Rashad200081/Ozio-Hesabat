@@ -23,24 +23,7 @@ custom_style = """
     background-color: rgba(0,0,0,0);
 }
 
-/* Yuxarı Loqo və Kuryerlər konteyneri */
-.header-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
-    margin-bottom: 25px;
-}
 
-.courier-img {
-    height: 140px;
-    object-fit: contain;
-    filter: drop-shadow(0px 8px 15px rgba(0,0,0,0.4));
-}
-
-.courier-right {
-    transform: scaleX(-1);
-}
 
 /* Ozio Loqosu (80px) */
 .ozio-logo-badge {
