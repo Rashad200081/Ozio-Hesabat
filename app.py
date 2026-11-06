@@ -12,7 +12,7 @@ custom_style = """
 <style>
 /* Bütün arxa fon Ozio loqosunun brend rəngi */
 [data-testid="stAppViewContainer"] {
-    background-color: #000000;
+    background-color: #e82562;
     color: #ffffff;
 }
 [data-testid="stAppViewContainer"] > .main {
