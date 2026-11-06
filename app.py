@@ -61,20 +61,20 @@ textarea::placeholder {
     color: #777777 !important;
 }
 
-/* "Başla" düyməsinin xanasının (ağ) və yazısının (qara) rəngi */
+/* "Başla" düyməsinin xanasının (ağ) və yazısının (tünd qara) rəngi */
 div.stButton > button {
     background-color: #ffffff !important;  /* Düymə xanasının rəngi (ağ) */
-    color: #000000 !important;             /* "Başla" yazısının rəngi (QARA) */
+    color: #000000 !important;             /* "Başla" yazısının rəngi (tam qara) */
     border: none !important;
-    font-weight: bold !important;
+    font-weight: 800 !important;
     font-size: 18px !important;
     padding: 12px 36px !important;
     border-radius: 10px !important;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.25) !important;
 }
 div.stButton > button:hover {
-    background-color: #f8f8f8 !important;
-    color: #333333 !important;
+    background-color: #f0f0f0 !important;
+    color: #000000 !important;             /* Üzərinə gələndə də qara qalsın */
     transform: scale(1.02);
 }
 </style>
