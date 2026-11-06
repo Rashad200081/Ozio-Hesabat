@@ -28,7 +28,7 @@ custom_style = """
     justify-content: center;
     align-items: center;
     gap: 50px;
-    margin-bottom: 25px;
+    margin-bottom: 50px;
 }
 
 .courier-img {
