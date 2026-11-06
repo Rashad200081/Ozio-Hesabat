@@ -61,21 +61,33 @@ textarea::placeholder {
     color: #777777 !important;
 }
 
-/* "Başla" düyməsinin xanasının (ağ) və yazısının (tünd qara) rəngi */
-div.stButton > button {
-    background-color: #ffffff !important;  /* Düymə xanasının rəngi (ağ) */
-    color: #000000 !important;             /* "Başla" yazısının rəngi (tam qara) */
+/* "Başla" düyməsinin xanasının (AĞ) və YAZISININ (TAM QARA) rəngi */
+div.stButton > button, 
+div.stButton > button:link, 
+div.stButton > button:visited {
+    background-color: #ffffff !important;
     border: none !important;
-    font-weight: 800 !important;
-    font-size: 18px !important;
-    padding: 12px 36px !important;
-    border-radius: 10px !important;
     box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.25) !important;
+    border-radius: 10px !important;
+    padding: 12px 36px !important;
 }
+
+/* Düymə daxilindəki "Başla" mətnini tam qara edirik */
+div.stButton > button p,
+div.stButton > button div,
+div.stButton > button span {
+    color: #000000 !important;
+    font-weight: 900 !important;
+    font-size: 18px !important;
+}
+
 div.stButton > button:hover {
     background-color: #f0f0f0 !important;
-    color: #000000 !important;             /* Üzərinə gələndə də qara qalsın */
     transform: scale(1.02);
+}
+
+div.stButton > button:hover p {
+    color: #000000 !important;
 }
 </style>
 """
@@ -234,13 +246,3 @@ if st.button("Başla", type="primary"):
             with col2:
                 output = io.BytesIO()
                 wb = pd.ExcelWriter(output, engine='openpyxl')
-                df.to_excel(wb, index=False, sheet_name='Sheet1')
-                wb.close()
-                processed_data = output.getvalue()
-                
-                st.download_button(
-                    label="📥 Fayl olaraq Endir (.xlsx)",
-                    data=processed_data,
-                    file_name="sifaris_hesabati.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
