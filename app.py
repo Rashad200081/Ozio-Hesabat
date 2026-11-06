@@ -27,12 +27,12 @@ custom_style = """
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 25px;
+    gap: 30px;
     margin-bottom: 25px;
 }
 
 .courier-img {
-    height: 100px;
+    height: 120px;
     object-fit: contain;
 }
 
@@ -106,12 +106,12 @@ div.stButton > button:hover p {
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-# Mərkəzdə Ozio Loqosu (80px), Sağ və Solda Kuryer Şəkilləri
+# Mərkəzdə Ozio Loqosu (80px), Sağda və Solda yüklədiyiniz Ozio Kuryer Şəkli
 header_html = """
 <div class="header-container">
-    <img src="https://img.icons8.com/3d-fluency/180/delivery-scooter.png" class="courier-img" alt="Kuryer Sol">
+    <img src="raw.githubusercontent.com/Rashad200081/Ozio-Hesabat/main/kuryer.png" class="courier-img" alt="Kuryer Sol">
     <div class="ozio-logo-badge">ozio<span>+</span></div>
-    <img src="https://img.icons8.com/3d-fluency/180/delivery-scooter.png" class="courier-img courier-right" alt="Kuryer Sağ">
+    <img src="raw.githubusercontent.com/Rashad200081/Ozio-Hesabat/main/kuryer.png" class="courier-img courier-right" alt="Kuryer Sağ">
 </div>
 """
 st.markdown(header_html, unsafe_allow_html=True)
@@ -231,48 +231,3 @@ def parse_orders(text):
         def get_store_priority(store_name):
             name = str(store_name).lower()
             if "təzə bazar" in name or "teze bazar" in name:
-                return 1
-            elif "salamzadə" in name or "salamzade" in name:
-                return 2
-            elif "mir cəlal" in name or "mir celal" in name:
-                return 3
-            else:
-                return 4
-
-        df['Priority'] = df['Mağaza'].apply(get_store_priority)
-        df = df.sort_values(by=['Priority', 'Mağaza']).drop(columns=['Priority'])
-        
-    return df
-
-if st.button("Başla", type="primary"):
-    if not raw_text.strip():
-        st.warning("Zəhmət olmasa mətn daxil edin!")
-    else:
-        df = parse_orders(raw_text)
-        
-        if df.empty:
-            st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
-        else:
-            st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
-            st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            tsv_data = df.to_csv(sep='\t', index=False)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.text_area("📋 Excel üçün Kopyalayın (Hamısını seçib Ctrl+C edin):", value=tsv_data, height=150)
-            
-            with col2:
-                output = io.BytesIO()
-                wb = pd.ExcelWriter(output, engine='openpyxl')
-                df.to_excel(wb, index=False, sheet_name='Sheet1')
-                wb.close()
-                processed_data = output.getvalue()
-                
-                st.download_button(
-                    label="📥 Fayl olaraq Endir (.xlsx)",
-                    data=processed_data,
-                    file_name="sifaris_hesabati.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
