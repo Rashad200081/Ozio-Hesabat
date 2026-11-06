@@ -11,17 +11,21 @@ st.write("Sifariş mətnini aşağıdakı sahəyə yapışdırın və avtomatik 
 
 raw_text = st.text_area("Sifariş mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
 
-def parse_time(time_str):
-    """Mətndən saat:dəqiqə (HH:MM) vaxtını datetime obyekti kimi çıxarır"""
+def extract_time_str(time_str):
+    """Mətndən ixtiyari vaxt strukturundan (məsələn M11 5 15:40) yalnız HH:MM hissəsini təmizləyib çıxarır"""
     if not time_str or time_str == "-":
-        return None
+        return "-"
     match = re.search(r'(\d{1,2}:\d{2})', time_str)
-    if match:
-        try:
-            return datetime.strptime(match.group(1), "%H:%M")
-        except ValueError:
-            return None
-    return None
+    return match.group(1) if match else "-"
+
+def parse_time_obj(time_clean):
+    """Təmizlənmiş HH:MM saatını datetime obyektinə çevirir"""
+    if not time_clean or time_clean == "-":
+        return None
+    try:
+        return datetime.strptime(time_clean, "%H:%M")
+    except ValueError:
+        return None
 
 def parse_orders(text):
     blocks = re.split(r'(?=Sifariş\s*#)', text)
@@ -37,8 +41,10 @@ def parse_orders(text):
         lines = [line.strip() for line in block.strip().split('\n') if line.strip()]
         
         store = ""
-        created_str = "-"
-        delivered_str = "-"
+        created_raw = "-"
+        accept_raw = "-"
+        ready_raw = "-"
+        delivered_raw = "-"
         
         for i, line in enumerate(lines):
             if i == 1 and "Kurye" not in line and "Yaradılıb" not in line:
@@ -46,24 +52,40 @@ def parse_orders(text):
                 
             if "Yaradılıb" in line:
                 m = re.search(r':\s*(.+)', line)
-                if m: created_str = m.group(1).strip()
-                
+                if m: created_raw = m.group(1).strip()
+            if "Kurye qəbul" in line:
+                m = re.search(r':\s*(.+)', line)
+                if m: accept_raw = m.group(1).strip()
+            if "Mağaza hazır" in line:
+                m = re.search(r':\s*(.+)', line)
+                if m: ready_raw = m.group(1).strip()
             if "Çatdırılıb" in line:
                 m = re.search(r':\s*(.+)', line)
-                if m: delivered_str = m.group(1).strip()
+                if m: delivered_raw = m.group(1).strip()
         
-        # Vaxt fərqinin (dəqiqə ilə) hesablanması
-        created_dt = parse_time(created_str)
-        delivered_dt = parse_time(delivered_str)
+        # Vaxtları təmizləyirik (M11 5 kimi yazılar silinir, yalnız HH:MM qalır)
+        created_clean = extract_time_str(created_raw)
+        
+        # Əgər çatdırılıb vaxtı yoxdursa, ardıcıl olaraq Mağaza hazır və ya Kurye qəbul vaxtını götürürük
+        end_raw = "-"
+        for candidate in [delivered_raw, ready_raw, accept_raw]:
+            if candidate != "-":
+                end_raw = candidate
+                break
+        
+        end_clean = extract_time_str(end_raw)
+        
+        created_dt = parse_time_obj(created_clean)
+        end_dt = parse_time_obj(end_clean)
         
         diff_minutes = ""
         status = "-"
         
-        if created_dt and delivered_dt:
-            if delivered_dt < created_dt:
-                diff = (delivered_dt - created_dt).seconds // 60
+        if created_dt and end_dt:
+            if end_dt < created_dt:
+                diff = (end_dt - created_dt).seconds // 60
             else:
-                diff = int((delivered_dt - created_dt).total_seconds() // 60)
+                diff = int((end_dt - created_dt).total_seconds() // 60)
             
             diff_minutes = diff
             
@@ -83,8 +105,8 @@ def parse_orders(text):
         parsed_data.append({
             "Mağaza": store,
             "Sifariş ID": order_id,
-            "Yaradılıb": created_str,
-            "Çatdırılıb": delivered_str,
+            "Yaradılıb": created_clean,
+            "Çatdırılıb": end_clean,
             "Fərq": diff_minutes,
             "Status": status
         })
