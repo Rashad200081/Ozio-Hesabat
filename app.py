@@ -49,10 +49,10 @@ st.markdown(custom_style, unsafe_allow_html=True)
 # Yuxarı mərkəzdə parlaq Ozio brend logosu
 st.markdown('<div class="ozio-logo-container"><div class="ozio-logo-badge">ozio<span>+</span></div></div>', unsafe_allow_html=True)
 
-st.title("📦 Ozio Sifarişləri - Hesabatı Analizatoru")
+st.title("📦 Ozio Sifarişləri - Hesabat Analizatoru")
 st.write("Sifarişlərin mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
 
-raw_text = st.text_area("Sifarişlərin mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
+raw_text = st.text_area("Sifarişlərin məlumatlarını bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
 
 def extract_time_str(time_str):
     if not time_str or time_str == "-":
@@ -168,7 +168,7 @@ def parse_orders(text):
         
     return df
 
-if st.button("Excel Faylı Yarad", type="primary"):
+if st.button("Başla", type="primary"):
     if not raw_text.strip():
         st.warning("Zəhmət olmasa mətn daxil edin!")
     else:
