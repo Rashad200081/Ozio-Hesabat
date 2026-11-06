@@ -7,27 +7,47 @@ from datetime import datetime
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 
-# Ozio loqosunu ancaq yuxarıda - başlığın üstündə yerləşdirmək üçün CSS
+# Yuxarıda arxa fonla tam uyğunlaşdırılmış Ozio logosu üçün CSS
 custom_style = """
 <style>
 [data-testid="stAppViewContainer"] {
-    background-image: url("https://media.licdn.com/dms/image/v2/D4E0BAQE3QWhVImxk2w/company-logo_200_200/company-logo_200_200/0/1728218896314/ozioplus_logo?e=2147483647&v=beta&t=WnQTXBfPOrx3jeT6hTih5qyKTULgc8hml-SIZEkCg1c");
-    background-size: 160px;
-    background-position: center 20px;
-    background-repeat: no-repeat;
     background-color: #12121f;
     color: #ffffff;
 }
-/* Loqo yuxarıda rahat yerləşsin deyə kontentə yuxarıdan məsafə veririk */
 [data-testid="stAppViewContainer"] > .main {
-    padding-top: 140px;
+    padding-top: 50px;
 }
 [data-testid="stHeader"] {
     background-color: rgba(0,0,0,0);
 }
+
+/* Ozio xüsusi brend logosu */
+.ozio-logo-container {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.ozio-logo-badge {
+    display: inline-block;
+    background-color: #e82562;
+    color: #ffffff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    padding: 8px 30px;
+    border-radius: 12px;
+    letter-spacing: 1px;
+    box-shadow: 0px 4px 15px rgba(232, 37, 98, 0.4);
+}
+.ozio-logo-badge span {
+    font-size: 26px;
+    vertical-align: super;
+}
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
+
+# Yuxarı mərkəzdə parlaq Ozio brend logosu
+st.markdown('<div class="ozio-logo-container"><div class="ozio-logo-badge">ozio<span>+</span></div></div>', unsafe_allow_html=True)
 
 st.title("📦 Ozio Sifarişləri - Hesabatı Analizatoru")
 st.write("Sifarişlərin mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
