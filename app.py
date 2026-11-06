@@ -24,7 +24,7 @@ custom_style = """
 /* Ozio xüsusi brend logosu */
 .ozio-logo-container {
     text-align: center;
-    margin-bottom: 10px;
+    margin-bottom: 50px;
 }
 .ozio-logo-badge {
     display: inline-block;
