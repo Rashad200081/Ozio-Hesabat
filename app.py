@@ -23,7 +23,13 @@ custom_style = """
     background-color: rgba(0,0,0,0);
 }
 
-
+/* Yuxarı Loqo konteyneri */
+.header-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 25px;
+}
 
 /* Ozio Loqosu (80px) */
 .ozio-logo-badge {
@@ -91,12 +97,10 @@ div.stButton > button:hover p {
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-# Mərkəzdə Ozio Loqosu (80px), Sağda və Solda Yüklədiyiniz Kuryer Şəkli
+# Yalnız mərkəzdə Ozio Loqosu
 header_html = """
 <div class="header-container">
-    <img src="https://raw.githubusercontent.com/Rashad200081/Ozio-Hesabat/main/kuryer.png.png" class="courier-img" alt="Kuryer Sol">
     <div class="ozio-logo-badge">ozio<span>+</span></div>
-    <img src="https://raw.githubusercontent.com/Rashad200081/Ozio-Hesabat/main/kuryer.png.png" class="courier-img courier-right" alt="Kuryer Sağ">
 </div>
 """
 st.markdown(header_html, unsafe_allow_html=True)
@@ -152,95 +156,4 @@ def parse_orders(text):
                 if m: created_raw = m.group(1).strip()
             if "Kurye qəbul" in line:
                 m = re.search(r':\s*(.+)', line)
-                if m: accept_raw = m.group(1).strip()
-            if "Mağaza hazır" in line:
-                m = re.search(r':\s*(.+)', line)
-                if m: ready_raw = m.group(1).strip()
-            if "Çatdırılıb" in line:
-                m = re.search(r':\s*(.+)', line)
-                if m: delivered_raw = m.group(1).strip()
-            if "Ləğv" in line or "ləğv" in line.lower():
-                is_cancelled = True
-
-        created_clean = extract_time_str(created_raw)
-        
-        end_raw = "—"
-        for candidate in [delivered_raw, ready_raw, accept_raw]:
-            if candidate != "—":
-                end_raw = candidate
-                break
-        
-        end_clean = extract_time_str(end_raw)
-        
-        created_dt = parse_time_obj(created_clean)
-        end_dt = parse_time_obj(end_clean)
-        
-        diff_minutes = "—"
-        status = "Normal"
-        
-        if is_cancelled or delivered_raw == "—":
-            status = "Ləğv"
-            end_clean = "—"
-        elif created_dt and end_dt:
-            if end_dt < created_dt:
-                diff = (end_dt - created_dt).seconds // 60
-            else:
-                diff = int((end_dt - created_dt).total_seconds() // 60)
-            
-            diff_minutes = diff
-            
-            store_lower = store.lower()
-            if "təzə bazar" in store_lower or "teze bazar" in store_lower:
-                if diff > 60:
-                    status = "Gecikmə"
-                else:
-                    status = "Normal"
-            else:
-                if diff > 45:
-                    status = "Gecikmə"
-                else:
-                    status = "Normal"
-
-        parsed_data.append({
-            "Mağaza": store,
-            "Sifariş ID": order_id,
-            "Yaradılıb": created_clean,
-            "Çatdırılıb": end_clean,
-            "Fərq": diff_minutes,
-            "Status": status
-        })
-        
-    df = pd.DataFrame(parsed_data)
-    
-    if not df.empty:
-        def get_store_priority(store_name):
-            name = str(store_name).lower()
-            if "təzə bazar" in name or "teze bazar" in name:
-                return 1
-            elif "salamzadə" in name or "salamzade" in name:
-                return 2
-            elif "mir cəlal" in name or "mir celal" in name:
-                return 3
-            else:
-                return 4
-
-        df['Priority'] = df['Mağaza'].apply(get_store_priority)
-        df = df.sort_values(by=['Priority', 'Mağaza']).drop(columns=['Priority'])
-        
-    return df
-
-if st.button("Başla", type="primary"):
-    if not raw_text.strip():
-        st.warning("Zəhmət olmasa mətn daxil edin!")
-    else:
-        df = parse_orders(raw_text)
-        
-        if df.empty:
-            st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
-        else:
-            st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
-            st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            tsv_data = df.to_csv(sep='\t', index=False)
-            
-            col1, col2 = st.columns(2)
+                if m: accept_raw = m.group(1
