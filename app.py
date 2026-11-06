@@ -2,15 +2,26 @@ import re
 import io
 import pandas as pd
 import streamlit as st
-from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
+from datetime import datetime
 
-st.set_page_config(page_title="Sifariş Analizatoru", layout="centered")
+st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 
-st.title("📦 Kuryer Sifarişləri - Excel Çevirici")
-st.write("Sifariş mətnini aşağıdakı sahəyə yapışdırın və avtomatik olaraq Excel cədvəli yaradın.")
+st.title("📦 Kuryer Sifarişləri - Gecikmə Analizatoru")
+st.write("Sifariş mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
 
-raw_text = st.text_area("Sifariş mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nMegastore Həzi Aslanov\n...")
+raw_text = st.text_area("Sifariş mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
+
+def parse_time(time_str):
+    """Mətndən saat:dəqiqə (HH:MM) vaxtını datetime obyekti kimi çıxarır"""
+    if not time_str or time_str == "-":
+        return None
+    match = re.search(r'(\d{1,2}:\d{2})', time_str)
+    if match:
+        try:
+            return datetime.strptime(match.group(1), "%H:%M")
+        except ValueError:
+            return None
+    return None
 
 def parse_orders(text):
     blocks = re.split(r'(?=Sifariş\s*#)', text)
@@ -26,55 +37,77 @@ def parse_orders(text):
         lines = [line.strip() for line in block.strip().split('\n') if line.strip()]
         
         store = ""
-        courier_id = ""
-        courier_name = ""
-        created = "-"
-        courier_accept = "-"
-        store_ready = "-"
-        delivered = "-"
-        amount = 0.0
+        created_str = "-"
+        delivered_str = "-"
         
         for i, line in enumerate(lines):
             if i == 1 and "Kurye" not in line and "Yaradılıb" not in line:
                 store = line
                 
-            if "Kurye #" in line:
-                c_match = re.search(r'Kurye\s*#(\d+)\s*[·•-]\s*(.+)', line)
-                if c_match:
-                    courier_id = int(c_match.group(1))
-                    courier_name = c_match.group(2).strip()
-            
             if "Yaradılıb" in line:
                 m = re.search(r':\s*(.+)', line)
-                if m: created = m.group(1).strip()
-            if "Kurye qəbul" in line:
-                m = re.search(r':\s*(.+)', line)
-                if m: courier_accept = m.group(1).strip()
-            if "Mağaza hazır" in line:
-                m = re.search(r':\s*(.+)', line)
-                if m: store_ready = m.group(1).strip()
+                if m: created_str = m.group(1).strip()
+                
             if "Çatdırılıb" in line:
                 m = re.search(r':\s*(.+)', line)
-                if m: delivered = m.group(1).strip()
-                
-            if "₼" in line:
-                amt_match = re.search(r'([\d\.]+)', line)
-                if amt_match:
-                    amount = float(amt_match.group(1))
-                    
+                if m: delivered_str = m.group(1).strip()
+        
+        # Vaxt fərqinin (dəqiqə ilə) hesablanması
+        created_dt = parse_time(created_str)
+        delivered_dt = parse_time(delivered_str)
+        
+        diff_minutes = ""
+        status = "-"
+        
+        if created_dt and delivered_dt:
+            if delivered_dt < created_dt:
+                diff = (delivered_dt - created_dt).seconds // 60
+            else:
+                diff = int((delivered_dt - created_dt).total_seconds() // 60)
+            
+            diff_minutes = diff
+            
+            # Gecikmə qaydası: Təzə bazar > 60 dəq, Digərləri > 45 dəq
+            store_lower = store.lower()
+            if "təzə bazar" in store_lower or "teze bazar" in store_lower:
+                if diff > 60:
+                    status = "Gecikmə"
+                else:
+                    status = "Normal"
+            else:
+                if diff > 45:
+                    status = "Gecikmə"
+                else:
+                    status = "Normal"
+
         parsed_data.append({
-            "Sifariş #": order_id,
             "Mağaza": store,
-            "Kurye İD": courier_id,
-            "Kurye Adı": courier_name,
-            "Yaradılıb (Mağaza)": created,
-            "Kurye Qəbul": courier_accept,
-            "Mağaza Hazır": store_ready,
-            "Çatdırılıb": delivered,
-            "Məbləğ (₼)": amount
+            "Sifariş ID": order_id,
+            "Yaradılıb": created_str,
+            "Çatdırılıb": delivered_str,
+            "Fərq": diff_minutes,
+            "Status": status
         })
         
-    return pd.DataFrame(parsed_data)
+    df = pd.DataFrame(parsed_data)
+    
+    if not df.empty:
+        # Mağazaların prioritet sıralaması
+        def get_store_priority(store_name):
+            name = str(store_name).lower()
+            if "təzə bazar" in name or "teze bazar" in name:
+                return 1
+            elif "salamzadə" in name or "salamzade" in name:
+                return 2
+            elif "mir cəlal" in name or "mir celal" in name:
+                return 3
+            else:
+                return 4
+
+        df['Priority'] = df['Mağaza'].apply(get_store_priority)
+        df = df.sort_values(by=['Priority', 'Mağaza']).drop(columns=['Priority'])
+        
+    return df
 
 if st.button("Excel Faylı Yarad", type="primary"):
     if not raw_text.strip():
@@ -85,8 +118,8 @@ if st.button("Excel Faylı Yarad", type="primary"):
         if df.empty:
             st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
         else:
-            st.success(f"Ümumi {len(df)} sifariş tapıldı!")
-            st.dataframe(df)
+            st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
+            st.dataframe(df, use_container_width=True)
             
             output = io.BytesIO()
             wb = pd.ExcelWriter(output, engine='openpyxl')
