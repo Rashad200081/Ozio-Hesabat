@@ -27,7 +27,7 @@ custom_style = """
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 30px;
+    gap: 50px;
     margin-bottom: 25px;
 }
 
