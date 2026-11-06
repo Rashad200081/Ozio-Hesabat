@@ -7,12 +7,13 @@ from datetime import datetime
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 
-# Arxa fon rəngi (Şəkildəki tünd çəhrayı / albalı-qırmızı / bordo qradiyent)
+# Arxa fon rəngi (Şəkildəki orijinal tünd bordo-albalı çəhrayı dinamik qradiyent)
 custom_style = """
 <style>
-/* Arxa fon üçün tünd çəhrayı-bordo dinamik qradiyent */
+/* Şəkildəki dəqiq fon rəngləri: tünd bordo (#2b0014) -> albalı-qırmızı (#8d003a) -> çəhrayı-bordo (#d8005f) */
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg, #8b0032 0%, #b80046 50%, #610022 100%);
+    background: linear-gradient(145deg, #2a0013 0%, #70002d 45%, #b9004b 75%, #e60064 100%);
+    background-attachment: fixed;
     color: #ffffff;
 }
 [data-testid="stAppViewContainer"] > .main {
@@ -34,6 +35,7 @@ custom_style = """
 .courier-img {
     height: 140px;
     object-fit: contain;
+    filter: drop-shadow(0px 8px 15px rgba(0,0,0,0.4));
 }
 
 .courier-right {
@@ -43,14 +45,14 @@ custom_style = """
 /* Ozio Loqosu (80px) */
 .ozio-logo-badge {
     background-color: #ffffff;
-    color: #b80046;
+    color: #d8005f;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-size: 80px;
     font-weight: 900;
     padding: 6px 45px;
     border-radius: 18px;
     letter-spacing: 1px;
-    box-shadow: 0px 6px 25px rgba(0, 0, 0, 0.4);
+    box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.4);
     display: inline-block;
 }
 .ozio-logo-badge span {
@@ -259,20 +261,3 @@ if st.button("Başla", type="primary"):
             tsv_data = df.to_csv(sep='\t', index=False)
             
             col1, col2 = st.columns(2)
-            
-            with col1:
-                st.text_area("📋 Excel üçün Kopyalayın (Hamısını seçib Ctrl+C edin):", value=tsv_data, height=150)
-            
-            with col2:
-                output = io.BytesIO()
-                wb = pd.ExcelWriter(output, engine='openpyxl')
-                df.to_excel(wb, index=False, sheet_name='Sheet1')
-                wb.close()
-                processed_data = output.getvalue()
-                
-                st.download_button(
-                    label="📥 Fayl olaraq Endir (.xlsx)",
-                    data=processed_data,
-                    file_name="sifaris_hesabati.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
