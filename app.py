@@ -55,7 +55,6 @@ raw_text = st.text_area("Sifarişlərin məlumatlarını bura yapışdırın:", 
 def extract_time_str(time_str):
     if not time_str or time_str in ["-", "—"]:
         return "—"
-    # Mətndə nöqtə ilə yazılmış vaxtları (məsələn: 12.19.00 və ya 12.19) iki nöqtəyə çeviririk
     clean_str = str(time_str).replace('.', ':')
     match = re.search(r'(\d{1,2}:\d{2})', clean_str)
     if match:
@@ -66,12 +65,9 @@ def parse_time_obj(time_clean):
     if not time_clean or time_clean == "—":
         return None
     try:
-        return datetime.strptime(time_clean, "%H:%M:%S")
+        return datetime.strptime(time_clean, "%H:%M")
     except ValueError:
-        try:
-            return datetime.strptime(time_clean, "%H:%M")
-        except ValueError:
-            return None
+        return None
 
 def parse_orders(text):
     blocks = re.split(r'(?=Sifariş\s*#)', text)
@@ -191,15 +187,24 @@ if st.button("Başla", type="primary"):
             st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
             st.dataframe(df, use_container_width=True, hide_index=True)
             
-            output = io.BytesIO()
-            wb = pd.ExcelWriter(output, engine='openpyxl')
-            df.to_excel(wb, index=False, sheet_name='Sheet1')
-            wb.close()
-            processed_data = output.getvalue()
+            # Excel formatında Tab ilə ayrılmış mətn (Copy-Paste üçün)
+            tsv_data = df.to_csv(sep='\t', index=False)
             
-            st.download_button(
-                label="📥 Excel Faylını Endir (.xlsx)",
-                data=processed_data,
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.text_area("📋 Excel üçün Kopyalayın (Hamısını seçib Ctrl+C edin):", value=tsv_data, height=150)
+            
+            with col2:
+                output = io.BytesIO()
+                wb = pd.ExcelWriter(output, engine='openpyxl')
+                df.to_excel(wb, index=False, sheet_name='Sheet1')
+                wb.close()
+                processed_data = output.getvalue()
                 
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
+                st.download_button(
+                    label="📥 Fayl olaraq Endir (.xlsx)",
+                    data=processed_data,
+                    file_name="sifaris_hesabati.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
