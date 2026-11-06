@@ -27,12 +27,12 @@ custom_style = """
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 25px;
+    gap: 30px;
     margin-bottom: 25px;
 }
 
 .courier-img {
-    height: 100px;
+    height: 120px;
     object-fit: contain;
 }
 
@@ -106,12 +106,12 @@ div.stButton > button:hover p {
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-# Mərkəzdə Ozio Loqosu (80px), Sağ və Solda Kuryer Şəkilləri
+# Mərkəzdə Ozio Loqosu (80px), Sağda və Solda Yüklədiyiniz 3D Kuryer Şəkli
 header_html = """
 <div class="header-container">
-    <img src="https://img.icons8.com/3d-fluency/180/delivery-scooter.png" class="courier-img" alt="Kuryer Sol">
+    <img src="https://raw.githubusercontent.com/Rashad200081/Ozio-Hesabat/main/kuryer.png.png" class="courier-img" alt="Kuryer Sol">
     <div class="ozio-logo-badge">ozio<span>+</span></div>
-    <img src="https://img.icons8.com/3d-fluency/180/delivery-scooter.png" class="courier-img courier-right" alt="Kuryer Sağ">
+    <img src="https://raw.githubusercontent.com/Rashad200081/Ozio-Hesabat/main/kuryer.png.png" class="courier-img courier-right" alt="Kuryer Sağ">
 </div>
 """
 st.markdown(header_html, unsafe_allow_html=True)
