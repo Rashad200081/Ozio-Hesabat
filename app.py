@@ -22,7 +22,7 @@ custom_style = """
 }
 .ozio-logo-container {
     text-align: center;
-    margin-bottom: 100px;
+    margin-bottom: 80px;
 }
 .ozio-logo-badge {
     display: inline-block;
