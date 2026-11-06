@@ -32,7 +32,7 @@ custom_style = """
 }
 
 .courier-img {
-    height: 125px;
+    height: 1000px;
     object-fit: contain;
 }
 
