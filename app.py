@@ -3,9 +3,6 @@ import io
 import pandas as pd
 import streamlit as st
 from datetime import datetime
-import openpyxl
-from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
-from openpyxl.utils import get_column_letter
 
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
@@ -13,6 +10,7 @@ st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 # Arxa fon rəngi (Şəkildəki orijinal tünd bordo-albalı çəhrayı dinamik qradiyent)
 custom_style = """
 <style>
+/* Dəqiq fon rəngləri: tünd bordo (#2b0014) -> albalı-qırmızı (#8d003a) -> çəhrayı-bordo (#d8005f) */
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(145deg, #2a0013 0%, #70002d 45%, #b9004b 75%, #e60064 100%);
     background-attachment: fixed;
@@ -25,6 +23,7 @@ custom_style = """
     background-color: rgba(0,0,0,0);
 }
 
+/* Yuxarı Loqo konteyneri */
 .header-container {
     display: flex;
     justify-content: center;
@@ -32,6 +31,7 @@ custom_style = """
     margin-bottom: 25px;
 }
 
+/* Ozio Loqosu (80px) */
 .ozio-logo-badge {
     background-color: #ffffff;
     color: #d8005f;
@@ -49,10 +49,12 @@ custom_style = """
     vertical-align: super;
 }
 
+/* Titul və alt mətnlərin rəngi */
 h1, p, label {
     color: #ffffff !important;
 }
 
+/* Mətn daxiletmə sahəsi (ağ fonda) */
 textarea {
     background-color: #ffffff !important;
     color: #12121f !important;
@@ -64,6 +66,7 @@ textarea::placeholder {
     color: #777777 !important;
 }
 
+/* "Başla" düyməsinin stili (Xana ağ, mətn TAM QARA) */
 div.stButton > button, 
 div.stButton > button:link, 
 div.stButton > button:visited {
@@ -86,10 +89,15 @@ div.stButton > button:hover {
     background-color: #f0f0f0 !important;
     transform: scale(1.02);
 }
+
+div.stButton > button:hover p {
+    color: #000000 !important;
+}
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
+# Yalnız mərkəzdə Ozio Loqosu
 header_html = """
 <div class="header-container">
     <div class="ozio-logo-badge">ozio<span>+</span></div>
@@ -225,100 +233,6 @@ def parse_orders(text):
         
     return df
 
-def generate_styled_excel(df):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Sifarişlər"
-
-    # Başlıqlar
-    headers = ["Mağaza", "Sifariş ID", "Yaradılıb", "Çatdırılıb", "Fərq", "Status"]
-    ws.append(headers)
-
-    # Başlıq stili (Tünd göy fon, ağ qalın mətn)
-    header_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
-    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
-    thin_border = Border(
-        left=Side(style='thin', color='D9D9D9'),
-        right=Side(style='thin', color='D9D9D9'),
-        top=Side(style='thin', color='D9D9D9'),
-        bottom=Side(style='thin', color='D9D9D9')
-    )
-
-    for col_num, header in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = Alignment(horizontal="center", vertical="center")
-        cell.border = thin_border
-
-    # Rəng Fills
-    red_fill = PatternFill(start_color="F8CECC", end_color="F8CECC", fill_type="solid")  # Gecikmə / Ləğv (Açıq qırmızı)
-    normal_font = Font(name="Calibri", size=11)
-    bold_font = Font(name="Calibri", size=11, bold=True)
-    status_red_font = Font(name="Calibri", size=11, bold=True, color="C00000")
-
-    current_store = None
-    store_start_row = 2
-
-    for row_idx, row_data in enumerate(df.to_dict('records'), start=2):
-        store = row_data["Mağaza"]
-        status = str(row_data["Status"])
-
-        # Yeni mağaza başlandıqda əvvəlki mağazanın xanalarını birləşdirək
-        if current_store is not None and store != current_store:
-            if store_start_row < row_idx - 1:
-                ws.merge_cells(start_row=store_start_row, start_column=1, end_row=row_idx - 1, end_column=1)
-            store_start_row = row_idx
-
-        current_store = store
-
-        ws.cell(row=row_idx, column=1, value=store)
-        ws.cell(row=row_idx, column=2, value=row_data["Sifariş ID"])
-        ws.cell(row=row_idx, column=3, value=row_data["Yaradılıb"])
-        ws.cell(row=row_idx, column=4, value=row_data["Çatdırılıb"])
-        ws.cell(row=row_idx, column=5, value=row_data["Fərq"])
-        ws.cell(row=row_idx, column=6, value=status)
-
-        # Xana formatları və Hizalama
-        for col_idx in range(1, 7):
-            c = ws.cell(row=row_idx, column=col_idx)
-            c.border = thin_border
-            c.font = normal_font
-            
-            if col_idx in [2, 3, 4, 5, 6]:
-                c.alignment = Alignment(horizontal="center", vertical="center")
-            else:
-                c.alignment = Alignment(horizontal="left", vertical="center")
-
-            # Gecikmə və ya Ləğv olduqda bütün sətri və ya statusu rəngləyək
-            if status in ["Gecikmə", "Ləğv"]:
-                if col_idx in [5, 6]:
-                    c.fill = red_fill
-                    c.font = status_red_font
-
-    # Sonuncu mağaza xanalarını birləşdirək
-    if current_store is not None and store_start_row < len(df) + 2:
-        ws.merge_cells(start_row=store_start_row, start_column=1, end_row=len(df) + 1, end_column=1)
-
-    # Birləşdirilmiş Mağaza sütununda mətni mərkəzə gətirək
-    for r in range(2, len(df) + 2):
-        ws.cell(row=r, column=1).alignment = Alignment(horizontal="left", vertical="center")
-        ws.cell(row=r, column=1).font = bold_font
-
-    # Sütun genişliklərini avtomatik nizamlayaq
-    for col in ws.columns:
-        max_len = 0
-        col_letter = get_column_letter(col[0].column)
-        for cell in col:
-            val = str(cell.value or '')
-            if len(val) > max_len:
-                max_len = len(val)
-        ws.column_dimensions[col_letter].width = max(max_len + 5, 12)
-
-    output = io.BytesIO()
-    wb.save(output)
-    return output.getvalue()
-
 if st.button("Başla", type="primary"):
     if not raw_text.strip():
         st.warning("Zəhmət olmasa mətn daxil edin!")
@@ -339,11 +253,15 @@ if st.button("Başla", type="primary"):
                 st.text_area("📋 Excel üçün Kopyalayın (Hamısını seçib Ctrl+C edin):", value=tsv_data, height=150)
             
             with col2:
-                excel_bytes = generate_styled_excel(df)
+                output = io.BytesIO()
+                wb = pd.ExcelWriter(output, engine='openpyxl')
+                df.to_excel(wb, index=False, sheet_name='Sheet1')
+                wb.close()
+                processed_data = output.getvalue()
                 
                 st.download_button(
                     label="📥 Fayl olaraq Endir (.xlsx)",
-                    data=excel_bytes,
+                    data=processed_data,
                     file_name="sifaris_hesabati.xlsx",
                     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
                 )
