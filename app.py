@@ -7,14 +7,14 @@ from datetime import datetime
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 
-# Ozio loqosunun yuxarıda tam aydın görünməsi üçün yenilənmiş CSS
+# Şəklin bütün fonu tam örtməsi və Ozio loqosunun aydın görünməsi üçün CSS
 custom_style = """
 <style>
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(rgba(18, 18, 31, 0.45), rgba(18, 18, 31, 0.75)), 
+    background: linear-gradient(rgba(18, 18, 31, 0.70), rgba(18, 18, 31, 0.85)), 
                 url("https://media.licdn.com/dms/image/v2/D4E0BAQE3QWhVImxk2w/company-logo_200_200/company-logo_200_200/0/1728218896314/ozioplus_logo?e=2147483647&v=beta&t=WnQTXBfPOrx3jeT6hTih5qyKTULgc8hml-SIZEkCg1c");
-    background-size: 380px;
-    background-position: center 10%;
+    background-size: cover;
+    background-position: center top;
     background-repeat: no-repeat;
     background-attachment: fixed;
     color: #ffffff;
