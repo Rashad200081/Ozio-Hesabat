@@ -176,15 +176,6 @@ def parse_orders(text):
     return df
 
 if st.button("Başla", type="primary"):
-    div.stButton > button {
-    background-color: #ffffff !important;  /* Düymənin xanasının rəngi (məsələn: ağ) */
-    color: #e82562 !important;             /* "Başla" yazısının rəngi */
-    border: none !important;
-    font-weight: bold !important;
-    font-size: 18px !important;
-    padding: 12px 36px !important;
-    border-radius: 10px !important;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.25) !important;
     
     if not raw_text.strip():
         st.warning("Zəhmət olmasa mətn daxil edin!")
