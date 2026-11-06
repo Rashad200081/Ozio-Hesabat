@@ -29,7 +29,7 @@ custom_style = """
     background-color: #e82562;
     color: #ffffff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 1000px;
+    font-size: 100px;
     font-weight: 800;
     padding: 8px 30px;
     border-radius: 12px;
