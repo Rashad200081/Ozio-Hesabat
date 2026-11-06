@@ -4,7 +4,22 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime
 
+# Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
+
+# Modern tünd fon (Wallpaper effekti) üçün CSS
+custom_style = """
+<style>
+[data-testid="stAppViewContainer"] {
+    background: linear-gradient(135deg, #12121f 0%, #1a1a2e 100%);
+    color: #ffffff;
+}
+[data-testid="stHeader"] {
+    background-color: rgba(0,0,0,0);
+}
+</style>
+"""
+st.markdown(custom_style, unsafe_allow_html=True)
 
 st.title("📦 Kuryer Sifarişləri - Gecikmə Analizatoru")
 st.write("Sifariş mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
@@ -135,8 +150,6 @@ if st.button("Excel Faylı Yarad", type="primary"):
             st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
         else:
             st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
-            
-            # Soldakı sıra nömrələrini (index) ləğv etmək üçün hide_index=True əlavə olundu
             st.dataframe(df, use_container_width=True, hide_index=True)
             
             output = io.BytesIO()
