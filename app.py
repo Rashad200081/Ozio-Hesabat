@@ -200,6 +200,6 @@ if st.button("Başla", type="primary"):
             st.download_button(
                 label="📥 Excel Faylını Endir (.xlsx)",
                 data=processed_data,
-                file_name="04.11.2026.xlsx",
+                
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
