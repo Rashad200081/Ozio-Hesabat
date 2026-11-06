@@ -12,14 +12,12 @@ st.write("Sifariş mətnini aşağıdakı sahəyə yapışdırın və avtomatik 
 raw_text = st.text_area("Sifariş mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
 
 def extract_time_str(time_str):
-    """Mətndən ixtiyari vaxt strukturundan (məsələn M11 5 15:40) yalnız HH:MM hissəsini təmizləyib çıxarır"""
     if not time_str or time_str == "-":
         return "-"
     match = re.search(r'(\d{1,2}:\d{2})', time_str)
     return match.group(1) if match else "-"
 
 def parse_time_obj(time_clean):
-    """Təmizlənmiş HH:MM saatını datetime obyektinə çevirir"""
     if not time_clean or time_clean == "-":
         return None
     try:
@@ -63,10 +61,8 @@ def parse_orders(text):
                 m = re.search(r':\s*(.+)', line)
                 if m: delivered_raw = m.group(1).strip()
         
-        # Vaxtları təmizləyirik (M11 5 kimi yazılar silinir, yalnız HH:MM qalır)
         created_clean = extract_time_str(created_raw)
         
-        # Əgər çatdırılıb vaxtı yoxdursa, ardıcıl olaraq Mağaza hazır və ya Kurye qəbul vaxtını götürürük
         end_raw = "-"
         for candidate in [delivered_raw, ready_raw, accept_raw]:
             if candidate != "-":
@@ -89,7 +85,6 @@ def parse_orders(text):
             
             diff_minutes = diff
             
-            # Gecikmə qaydası: Təzə bazar > 60 dəq, Digərləri > 45 dəq
             store_lower = store.lower()
             if "təzə bazar" in store_lower or "teze bazar" in store_lower:
                 if diff > 60:
@@ -114,7 +109,6 @@ def parse_orders(text):
     df = pd.DataFrame(parsed_data)
     
     if not df.empty:
-        # Mağazaların prioritet sıralaması
         def get_store_priority(store_name):
             name = str(store_name).lower()
             if "təzə bazar" in name or "teze bazar" in name:
@@ -141,7 +135,9 @@ if st.button("Excel Faylı Yarad", type="primary"):
             st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
         else:
             st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
-            st.dataframe(df, use_container_width=True)
+            
+            # Soldakı sıra nömrələrini (index) ləğv etmək üçün hide_index=True əlavə olundu
+            st.dataframe(df, use_container_width=True, hide_index=True)
             
             output = io.BytesIO()
             wb = pd.ExcelWriter(output, engine='openpyxl')
