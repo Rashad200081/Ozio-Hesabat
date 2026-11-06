@@ -105,7 +105,7 @@ header_html = """
 """
 st.markdown(header_html, unsafe_allow_html=True)
 
-st.title("📦 Ozio Sifarişləri - Hesabat Analizatoru")
+st.title("📦 Ozio Sifarişləri - Hesabat Analizatoru Xezer uzuvu sikim men edirem bax")
 st.write("Sifarişlərin mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
 
 raw_text = st.text_area("Sifarişlərin məlumatlarını bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
