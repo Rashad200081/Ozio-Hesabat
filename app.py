@@ -7,22 +7,29 @@ from datetime import datetime
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 
-# Modern tünd fon (Wallpaper effekti) üçün CSS
+# Ozio şəkli ilə arxa fon effekti üçün CSS
 custom_style = """
 <style>
 [data-testid="stAppViewContainer"] {
-    background: linear-gradient(135deg, #12121f 0%, #1a1a2e 100%);
+    background-image: url("https://media.licdn.com/dms/image/v2/D4E0BAQE3QWhVImxk2w/company-logo_200_200/company-logo_200_200/0/1728218896314/ozioplus_logo?e=2147483647&v=beta&t=WnQTXBfPOrx3jeT6hTih5qyKTULgc8hml-SIZEkCg1c");
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
     color: #ffffff;
 }
 [data-testid="stHeader"] {
     background-color: rgba(0,0,0,0);
 }
+/* Mətnlərin və cədvəlin aydın oxunması üçün arxaya şəffaf tünd qat */
+.stApp {
+    background-color: rgba(18, 18, 31, 0.88); 
+}
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-st.title("📦 Ozio Sifarişləri -Hesabatı Analizatoru")
-st.write("Sifarişlərin mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradım.")
+st.title("📦 Ozio Sifarişləri - Hesabatı Analizatoru")
+st.write("Sifarişlərin mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
 
 raw_text = st.text_area("Sifarişlərin mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
 
@@ -134,33 +141,3 @@ def parse_orders(text):
                 return 3
             else:
                 return 4
-
-        df['Priority'] = df['Mağaza'].apply(get_store_priority)
-        df = df.sort_values(by=['Priority', 'Mağaza']).drop(columns=['Priority'])
-        
-    return df
-
-if st.button("Excel Faylı Yarad", type="primary"):
-    if not raw_text.strip():
-        st.warning("Zəhmət olmasa mətn daxil edin!")
-    else:
-        df = parse_orders(raw_text)
-        
-        if df.empty:
-            st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
-        else:
-            st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
-            st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            output = io.BytesIO()
-            wb = pd.ExcelWriter(output, engine='openpyxl')
-            df.to_excel(wb, index=False, sheet_name='Sifariş Hesabatı')
-            wb.close()
-            processed_data = output.getvalue()
-            
-            st.download_button(
-                label="📥 Excel Faylını Endir (.xlsx)",
-                data=processed_data,
-                file_name="sifaris_hesabati.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            )
