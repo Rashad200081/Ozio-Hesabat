@@ -21,10 +21,10 @@ custom_style = """
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-st.title("📦 Kuryer Sifarişləri - Gecikmə Analizatoru")
-st.write("Sifariş mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradın.")
+st.title("📦 Ozio Sifarişləri -Hesabatı Analizatoru")
+st.write("Sifarişlərin mətnini aşağıdakı sahəyə yapışdırın və avtomatik Excel cədvəli yaradım.")
 
-raw_text = st.text_area("Sifariş mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
+raw_text = st.text_area("Sifarişlərin mətnini bura yapışdırın:", height=250, placeholder="Sifariş #59478\nBolmart Təzə bazar\n...")
 
 def extract_time_str(time_str):
     if not time_str or time_str == "-":
