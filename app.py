@@ -55,12 +55,11 @@ raw_text = st.text_area("Sifarişlərin məlumatlarını bura yapışdırın:", 
 def extract_time_str(time_str):
     if not time_str or time_str in ["-", "—"]:
         return "—"
-    match = re.search(r'(\d{1,2}:\d{2}(?::\d{2})?)', time_str)
+    # Mətndə nöqtə ilə yazılmış vaxtları (məsələn: 12.19.00 və ya 12.19) iki nöqtəyə çeviririk
+    clean_str = str(time_str).replace('.', ':')
+    match = re.search(r'(\d{1,2}:\d{2})', clean_str)
     if match:
-        t_val = match.group(1)
-        if len(t_val.split(':')) == 2:
-            return f"{t_val}:00"
-        return t_val
+        return match.group(1)
     return "—"
 
 def parse_time_obj(time_clean):
