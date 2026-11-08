@@ -120,7 +120,8 @@ def parse_time_obj(time_clean):
         return None
 
 def parse_orders(text):
-    order_positions = [m.start() for m in re.finditer(r'Sifariş\s*#\d+', text)]
+    # Hər bir "Sifariş #" sözünü taparaq bloklara bölürük
+    order_positions = [m.start() for m in re.finditer(r'Sifariş\s*#', text)]
     if not order_positions:
         return pd.DataFrame()
 
@@ -141,7 +142,7 @@ def parse_orders(text):
         
         lines = [line.strip() for line in block.strip().split('\n') if line.strip()]
         
-        store = ""
+        store = "Digər"
         created_raw = "—"
         accept_raw = "—"
         ready_raw = "—"
@@ -149,8 +150,12 @@ def parse_orders(text):
         is_cancelled = False
         
         for i, line in enumerate(lines):
-            if i == 1 and "Kurye" not in line and "Yaradılıb" not in line:
+            # Mağaza adını tapmaq (Sifariş nömrəsindən dərhal sonrakı sətir adətən mağaza olur)
+            if i == 1 and not "Kurye" in line and not "Yaradılıb" in line:
                 store = line
+            elif i == 0 and len(lines) > 1:
+                # Alternativ olaraq mağaza adı axtarışı
+                pass
                 
             if "Yaradılıb" in line:
                 m = re.search(r':\s*(.+)', line)
@@ -166,6 +171,13 @@ def parse_orders(text):
                 if m: delivered_raw = m.group(1).strip()
             if "Ləğv" in line or "ləğv" in line.lower() or "cancell" in line.lower():
                 is_cancelled = True
+
+        # Əgər mağaza adı səhvə düşübsə mətn içindən tapaq
+        if not store or "Sifariş" in store:
+            for l in lines:
+                if "Bolmart" in l or "Megastore" in l:
+                    store = l
+                    break
 
         created_clean = extract_time_str(created_raw)
         
