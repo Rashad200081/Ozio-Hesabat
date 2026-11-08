@@ -236,3 +236,114 @@ def parse_orders(text):
 
 def generate_styled_excel(df):
     wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Sifarişlər"
+
+    headers = ["Mağaza", "Sifariş ID", "Yaradılıb", "Çatdırılıb", "Fərq", "Status"]
+    ws.append(headers)
+
+    header_fill = PatternFill(start_color="1B365D", end_color="1B365D", fill_type="solid")
+    header_font = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+    thin_border = Border(
+        left=Side(style='thin', color='D9D9D9'),
+        right=Side(style='thin', color='D9D9D9'),
+        top=Side(style='thin', color='D9D9D9'),
+        bottom=Side(style='thin', color='D9D9D9')
+    )
+
+    for col_num, header in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        cell.border = thin_border
+
+    red_fill = PatternFill(start_color="F8CECC", end_color="F8CECC", fill_type="solid")
+    normal_font = Font(name="Calibri", size=11)
+    bold_font = Font(name="Calibri", size=11, bold=True)
+    status_red_font = Font(name="Calibri", size=11, bold=True, color="C00000")
+
+    current_store = None
+    store_start_row = 2
+
+    for row_idx, row_data in enumerate(df.to_dict('records'), start=2):
+        store = row_data["Mağaza"]
+        status = str(row_data["Status"])
+
+        if current_store is not None and store != current_store:
+            if store_start_row < row_idx - 1:
+                ws.merge_cells(start_row=store_start_row, start_column=1, end_row=row_idx - 1, end_column=1)
+            store_start_row = row_idx
+
+        current_store = store
+
+        ws.cell(row=row_idx, column=1, value=store)
+        ws.cell(row=row_idx, column=2, value=row_data["Sifariş ID"])
+        ws.cell(row=row_idx, column=3, value=row_data["Yaradılıb"])
+        ws.cell(row=row_idx, column=4, value=row_data["Çatdırılıb"])
+        ws.cell(row=row_idx, column=5, value=row_data["Fərq"])
+        ws.cell(row=row_idx, column=6, value=status)
+
+        for col_idx in range(1, 7):
+            c = ws.cell(row=row_idx, column=col_idx)
+            c.border = thin_border
+            c.font = normal_font
+            
+            if col_idx in [2, 3, 4, 5, 6]:
+                c.alignment = Alignment(horizontal="center", vertical="center")
+            else:
+                c.alignment = Alignment(horizontal="left", vertical="center")
+
+            if status in ["Gecikmə", "Ləğv"]:
+                if col_idx in [5, 6]:
+                    c.fill = red_fill
+                    c.font = status_red_font
+
+    if current_store is not None and store_start_row < len(df) + 2:
+        ws.merge_cells(start_row=store_start_row, start_column=1, end_row=len(df) + 1, end_column=1)
+
+    for r in range(2, len(df) + 2):
+        ws.cell(row=r, column=1).alignment = Alignment(horizontal="left", vertical="center")
+        ws.cell(row=r, column=1).font = bold_font
+
+    for col in ws.columns:
+        max_len = 0
+        col_letter = get_column_letter(col[0].column)
+        for cell in col:
+            val = str(cell.value or '')
+            if len(val) > max_len:
+                max_len = len(val)
+        ws.column_dimensions[col_letter].width = max(max_len + 5, 12)
+
+    output = io.BytesIO()
+    wb.save(output)
+    return output.getvalue()
+
+if st.button("Başla", type="primary"):
+    if not raw_text.strip():
+        st.warning("Zəhmət olmasa mətn daxil edin!")
+    else:
+        df = parse_orders(raw_text)
+        
+        if df.empty:
+            st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
+        else:
+            st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
+            st.dataframe(df, use_container_width=True, hide_index=True)
+            
+            tsv_data = df.to_csv(sep='\t', index=False)
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.text_area("📋 Excel üçün Kopyalayın (Hamısını seçib Ctrl+C edin):", value=tsv_data, height=150)
+            
+            with col2:
+                excel_bytes = generate_styled_excel(df)
+                
+                st.download_button(
+                    label="📥 Fayl olaraq Endir (.xlsx)",
+                    data=excel_bytes,
+                    file_name="sifaris_hesabati.xlsx",
+                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
