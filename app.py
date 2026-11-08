@@ -3,6 +3,9 @@ import io
 import pandas as pd
 import streamlit as st
 from datetime import datetime
+import openpyxl
+from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 # Səhifə konfiqurasiyası
 st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
@@ -10,7 +13,6 @@ st.set_page_config(page_title="Sifariş Analizatoru", layout="wide")
 # Arxa fon rəngi (Şəkildəki orijinal tünd bordo-albalı çəhrayı dinamik qradiyent)
 custom_style = """
 <style>
-/* Dəqiq fon rəngləri: tünd bordo (#2b0014) -> albalı-qırmızı (#8d003a) -> çəhrayı-bordo (#d8005f) */
 [data-testid="stAppViewContainer"] {
     background: linear-gradient(145deg, #2a0013 0%, #70002d 45%, #b9004b 75%, #e60064 100%);
     background-attachment: fixed;
@@ -23,7 +25,6 @@ custom_style = """
     background-color: rgba(0,0,0,0);
 }
 
-/* Yuxarı Loqo konteyneri */
 .header-container {
     display: flex;
     justify-content: center;
@@ -31,7 +32,6 @@ custom_style = """
     margin-bottom: 25px;
 }
 
-/* Ozio Loqosu (80px) */
 .ozio-logo-badge {
     background-color: #ffffff;
     color: #d8005f;
@@ -49,12 +49,10 @@ custom_style = """
     vertical-align: super;
 }
 
-/* Titul və alt mətnlərin rəngi */
 h1, p, label {
     color: #ffffff !important;
 }
 
-/* Mətn daxiletmə sahəsi (ağ fonda) */
 textarea {
     background-color: #ffffff !important;
     color: #12121f !important;
@@ -66,7 +64,6 @@ textarea::placeholder {
     color: #777777 !important;
 }
 
-/* "Başla" düyməsinin stili (Xana ağ, mətn TAM QARA) */
 div.stButton > button, 
 div.stButton > button:link, 
 div.stButton > button:visited {
@@ -89,15 +86,10 @@ div.stButton > button:hover {
     background-color: #f0f0f0 !important;
     transform: scale(1.02);
 }
-
-div.stButton > button:hover p {
-    color: #000000 !important;
-}
 </style>
 """
 st.markdown(custom_style, unsafe_allow_html=True)
 
-# Yalnız mərkəzdə Ozio Loqosu
 header_html = """
 <div class="header-container">
     <div class="ozio-logo-badge">ozio<span>+</span></div>
@@ -128,7 +120,17 @@ def parse_time_obj(time_clean):
         return None
 
 def parse_orders(text):
-    blocks = re.split(r'(?=Sifariş\s*#)', text)
+    # 1. Hər bir Sifariş # olan yeri tapırıq (heç bir sifariş kənarda qalmasın)
+    order_positions = [m.start() for m in re.finditer(r'Sifariş\s*#\d+', text)]
+    if not order_positions:
+        return pd.DataFrame()
+
+    blocks = []
+    for i in range(len(order_positions)):
+        start = order_positions[i]
+        end = order_positions[i+1] if i+1 < len(order_positions) else len(text)
+        blocks.append(text[start:end])
+
     parsed_data = []
     
     for block in blocks:
@@ -163,105 +165,9 @@ def parse_orders(text):
             if "Çatdırılıb" in line:
                 m = re.search(r':\s*(.+)', line)
                 if m: delivered_raw = m.group(1).strip()
-            if "Ləğv" in line or "ləğv" in line.lower():
+            if "Ləğv" in line or "ləğv" in line.lower() or "cancell" in line.lower():
                 is_cancelled = True
 
         created_clean = extract_time_str(created_raw)
         
-        end_raw = "—"
-        for candidate in [delivered_raw, ready_raw, accept_raw]:
-            if candidate != "—":
-                end_raw = candidate
-                break
-        
-        end_clean = extract_time_str(end_raw)
-        
-        created_dt = parse_time_obj(created_clean)
-        end_dt = parse_time_obj(end_clean)
-        
-        diff_minutes = "—"
-        status = "Normal"
-        
-        if is_cancelled or delivered_raw == "—":
-            status = "Ləğv"
-            end_clean = "—"
-        elif created_dt and end_dt:
-            if end_dt < created_dt:
-                diff = (end_dt - created_dt).seconds // 60
-            else:
-                diff = int((end_dt - created_dt).total_seconds() // 60)
-            
-            diff_minutes = diff
-            
-            store_lower = store.lower()
-            if "təzə bazar" in store_lower or "teze bazar" in store_lower:
-                if diff > 60:
-                    status = "Gecikmə"
-                else:
-                    status = "Normal"
-            else:
-                if diff > 45:
-                    status = "Gecikmə"
-                else:
-                    status = "Normal"
-
-        parsed_data.append({
-            "Mağaza": store,
-            "Sifariş ID": order_id,
-            "Yaradılıb": created_clean,
-            "Çatdırılıb": end_clean,
-            "Fərq": diff_minutes,
-            "Status": status
-        })
-        
-    df = pd.DataFrame(parsed_data)
-    
-    if not df.empty:
-        def get_store_priority(store_name):
-            name = str(store_name).lower()
-            if "təzə bazar" in name or "teze bazar" in name:
-                return 1
-            elif "salamzadə" in name or "salamzade" in name:
-                return 2
-            elif "mir cəlal" in name or "mir celal" in name:
-                return 3
-            else:
-                return 4
-
-        df['Priority'] = df['Mağaza'].apply(get_store_priority)
-        df = df.sort_values(by=['Priority', 'Mağaza']).drop(columns=['Priority'])
-        
-    return df
-
-if st.button("Başla", type="primary"):
-    if not raw_text.strip():
-        st.warning("Zəhmət olmasa mətn daxil edin!")
-    else:
-        df = parse_orders(raw_text)
-        
-        if df.empty:
-            st.error("Mətndə heç bir sifariş tapılmadı. Formatı yoxlayın.")
-        else:
-            st.success(f"Ümumi {len(df)} sifariş analiz edildi!")
-            st.dataframe(df, use_container_width=True, hide_index=True)
-            
-            tsv_data = df.to_csv(sep='\t', index=False)
-            
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.text_area("📋 Excel üçün Kopyalayın (Hamısını seçib Ctrl+C edin):", value=tsv_data, height=150)
-            
-            with col2:
-                output = io.BytesIO()
-                wb = pd.ExcelWriter(output, engine='openpyxl')
-                df.to_excel(wb, index=False, sheet_name='Sheet1')
-                wb.close()
-                processed_data = output.getvalue()
-                
-                st.download_button(
-                    label="📥 Fayl olaraq Endir (.xlsx)",
-                    data=processed_data,
-                    file_name="sifaris_hesabati.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+        end_raw
