@@ -120,7 +120,6 @@ def parse_time_obj(time_clean):
         return None
 
 def parse_orders(text):
-    # 1. Hər bir Sifariş # olan yeri tapırıq (heç bir sifariş kənarda qalmasın)
     order_positions = [m.start() for m in re.finditer(r'Sifariş\s*#\d+', text)]
     if not order_positions:
         return pd.DataFrame()
@@ -170,4 +169,70 @@ def parse_orders(text):
 
         created_clean = extract_time_str(created_raw)
         
-        end_raw
+        end_raw = "—"
+        for candidate in [delivered_raw, ready_raw, accept_raw]:
+            if candidate != "—":
+                end_raw = candidate
+                break
+        
+        end_clean = extract_time_str(end_raw)
+        
+        created_dt = parse_time_obj(created_clean)
+        end_dt = parse_time_obj(end_clean)
+        
+        diff_minutes = "—"
+        status = "Normal"
+        
+        if is_cancelled or delivered_raw == "—":
+            status = "Ləğv"
+            end_clean = "—"
+        elif created_dt and end_dt:
+            if end_dt < created_dt:
+                diff = (end_dt - created_dt).seconds // 60
+            else:
+                diff = int((end_dt - created_dt).total_seconds() // 60)
+            
+            diff_minutes = diff
+            
+            store_lower = store.lower()
+            if "təzə bazar" in store_lower or "teze bazar" in store_lower:
+                if diff > 60:
+                    status = "Gecikmə"
+                else:
+                    status = "Normal"
+            else:
+                if diff > 45:
+                    status = "Gecikmə"
+                else:
+                    status = "Normal"
+
+        parsed_data.append({
+            "Mağaza": store,
+            "Sifariş ID": order_id,
+            "Yaradılıb": created_clean,
+            "Çatdırılıb": end_clean,
+            "Fərq": diff_minutes,
+            "Status": status
+        })
+        
+    df = pd.DataFrame(parsed_data)
+    
+    if not df.empty:
+        def get_store_priority(store_name):
+            name = str(store_name).lower()
+            if "təzə bazar" in name or "teze bazar" in name:
+                return 1
+            elif "salamzadə" in name or "salamzade" in name:
+                return 2
+            elif "mir cəlal" in name or "mir celal" in name:
+                return 3
+            else:
+                return 4
+
+        df['Priority'] = df['Mağaza'].apply(get_store_priority)
+        df = df.sort_values(by=['Priority', 'Mağaza']).drop(columns=['Priority'])
+        
+    return df
+
+def generate_styled_excel(df):
+    wb = openpyxl.Workbook()
